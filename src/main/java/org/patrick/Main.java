@@ -1,8 +1,6 @@
 package org.patrick;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -13,113 +11,45 @@ public class Main {
         
         System.out.println("Starting PosiLogger...");
         
-        String posiJohn = "";
-        String posiPaul = "";
-        String posiMakarov = "";
-        String posiVladimir = "";
-        String posiHans = "";
-        String workDone = "";
+        String log = "";
         
-        boolean statusJohn = false;
-        boolean statusPaul = false;
-        boolean statusMakarov = false;
-        boolean statusVladimir = false;
-        boolean statusHans = false;
+        ArrayList<String[]> infoList = PrivateInfo.getAllInfo();
+        ArrayList<Person> personList = new ArrayList<Person>();
+        
+        for (String[] info : infoList) {
+            personList.add(new Person(info));
+        }       
+        
+        Stalker stalker = new Stalker(personList);
         
         System.out.println("PosiLogger online");
        
         while (true) {           
-            try {
-                posiJohn = ApiReader.getPosition(Keys.getKeyJohn()[0]);
-                posiPaul = ApiReader.getPosition(Keys.getKeyPaul()[0]);
-                posiMakarov = ApiReader.getPosition(Keys.getKeyMakarov()[0]);
-                posiVladimir = ApiReader.getPosition(Keys.getKeyVladimir()[0]);
-                posiHans = ApiReader.getPosition(Keys.getKeyHans()[0]);
+            try {                
+                stalker.updatePosi();
             } catch (JSONException | IOException e) {
                 System.out.println("Failed getting pos");
                 e.printStackTrace();
             }
-           
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
-            LocalDateTime now = LocalDateTime.now();  
-            String currentTime = dtf.format(now);
             
             try {
-                ArrayList<String> stringList = ApiReader.getOnlinePlayers();
-                for (String player : stringList) {
-                    if (player.contains(Keys.getKeyJohn()[0])) {
-                        statusJohn = true;
-                    } else if (player.contains(Keys.getKeyPaul()[0])) {
-                        statusPaul = true;
-                    } else if (player.contains(Keys.getKeyMakarov()[0])) {
-                        statusMakarov = true;
-                    } else if (player.contains(Keys.getKeyVladimir()[0])) {
-                        statusVladimir = true;
-                    } else if (player.contains(Keys.getKeyHans()[0])) {
-                        statusHans = true;
-                    }
-                }
+                stalker.updateStatus();
             } catch (JSONException | IOException e) {
-                System.out.println("Failed getting online status at " + currentTime);
+                System.out.println("Failed getting online status");
                 e.printStackTrace();
             }    
             
-            workDone = currentTime + " Updated for:";
-            
-            if (statusJohn) {
-                try {
-                    PosiFile.append("posiJohn", currentTime, posiJohn);
-                    workDone = workDone + " John";
-                } catch (IOException e) {
-                    System.out.println("Failed writing for John");
-                    e.printStackTrace();
-                } 
+            try {
+                log = stalker.writePosi();
+            } catch (IOException e) {
+                System.out.println("Failed writing to file");
+                e.printStackTrace();
             }
             
-            if (statusPaul) {
-                try {
-                    PosiFile.append("posiPaul", currentTime, posiPaul);
-                    workDone = workDone + " Paul";
-                } catch (IOException e) {
-                    System.out.println("Failed writing for Paul");
-                    e.printStackTrace();
-                } 
-            }
-            
-            if (statusMakarov) {
-                try {
-                    PosiFile.append("posiMakarov", currentTime, posiMakarov);
-                    workDone = workDone + " Makarov";
-                } catch (IOException e) {
-                    System.out.println("Failed writing for Makarov");
-                    e.printStackTrace();
-                } 
-            }
-            
-            if (statusVladimir) {
-                try {
-                    PosiFile.append("posiVladimir", currentTime, posiVladimir);
-                    workDone = workDone + " Vladimir";
-                } catch (IOException e) {
-                    System.out.println("Failed writing for Vladimir");
-                    e.printStackTrace();
-                } 
-            }
-            
-            if (statusHans) {
-                try {
-                    PosiFile.append("posiHans", currentTime, posiHans);
-                    workDone = workDone + " Hans";
-                } catch (IOException e) {
-                    System.out.println("Failed writing for Hans");
-                    e.printStackTrace();
-                } 
-            }
-            
-            System.out.println(workDone);
+            System.out.println(log);
             
             try {
-                Thread.sleep(60*1000);
+                Thread.sleep(59*1000); //59 seconds since the code takes >1 second
             } catch (InterruptedException e) {
                 System.out.println("Failed sleeping");
                 e.printStackTrace();
