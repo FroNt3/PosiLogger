@@ -44,7 +44,7 @@ public class Person {
     }
 
     /**
-     * @return the online
+     * @return the status
      */
     public Boolean getStatus() {
         return status;
@@ -64,6 +64,5 @@ public class Person {
     public void setStatus(Boolean bool) {
         this.status = bool;
     }
-
     
 }
